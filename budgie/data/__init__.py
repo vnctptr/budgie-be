@@ -1,21 +1,25 @@
 from typing import (
   Dict,
-  List
+  Optional
 )
-
 
 from .io import load_user
 from .UserData import UserData
 
 users: Dict[ str, UserData ] = {}
 
-def get_user( name: str ) -> UserData:
+def get_user( name: str ) -> Optional[ UserData ]:
   """
   Gets the data for a given user name.
 
-  If the user doesn't exist, throws a LookupError
+  If the user doesn't exist, returns None
   """
-  if name not in users:
-    users[name] = load_user(name)
+  if name in users:
+    return users[name]
 
-  return users[name]
+  user = load_user(name)
+  if user is None:
+    return None
+
+  users[name] = user
+  return user
