@@ -8,5 +8,5 @@ def test_load_users():
   bob = budgie.data.get_user("bob")
   assert len(bob.accounts) > 0
 
-  with pytest.raises(LookupError):
-    budgie.data.get_user("carl")
+  carl = budgie.data.get_user("carl")
+  assert carl is None

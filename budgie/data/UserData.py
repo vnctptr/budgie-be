@@ -1,8 +1,14 @@
 from typing import List
-from beancount.core.data import Account
+
+from .Account import AccountList
 
 class UserData:
   """
-
+  Contans all data related to a given user
   """
-  accounts: List[Account] = []
+
+  def __init__( self ):
+    """
+    Constructor
+    """
+    self.accounts = AccountList()

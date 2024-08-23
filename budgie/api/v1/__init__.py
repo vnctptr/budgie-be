@@ -66,7 +66,7 @@ def get_account( name: str, **kwargs ):
     else:
       break
 
-  if account not in user.accounts:
+  if not user.accounts.contains(account):
     abort(404)
 
   return {}
