@@ -37,7 +37,8 @@ def get_account_list( name: str ):
     abort(404)
 
   return {
-    "accounts": user.accounts.to_dict()
+    "accounts": user.accounts.to_dict(),
+    "balance": user.real_accounts.balance
   }
 
 # ------------------------------------------------------------------------------

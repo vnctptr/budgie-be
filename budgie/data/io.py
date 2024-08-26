@@ -1,6 +1,8 @@
 from typing import Optional
 
-import beancount as bc
+from beancount.core.getters     import GetAccounts
+from beancount.core.realization import realize
+from beancount.loader           import load_file
 
 from .UserData import UserData
 
@@ -13,15 +15,15 @@ def load_user( name ) -> Optional[UserData]:
 
   Returns None if not found
   """
-  (entries, errors, option_map) = bc.loader.load_file(
-    f"./testdata/{name}.bc"
-  )
+  (entries, errors, option_map) = load_file( f"./testdata/{name}.bc" )
   if len(errors) > 0:
     return None
 
   ret = UserData()
+  ret.entries = entries
+  ret.real_accounts = realize(entries)
 
-  ( accounts, _ ) = bc.core.getters.GetAccounts().get_accounts_use_map(entries)
+  ( accounts, _ ) = GetAccounts().get_accounts_use_map(entries)
   for account in accounts:
     ret.accounts.append( account )
 

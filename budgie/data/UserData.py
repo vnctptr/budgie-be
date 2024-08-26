@@ -1,6 +1,6 @@
-from typing import List
-
 from .Account import AccountList
+
+from beancount.core.realization import RealAccount
 
 class UserData:
   """
@@ -11,4 +11,6 @@ class UserData:
     """
     Constructor
     """
+    self.entries = []
     self.accounts = AccountList()
+    self.real_accounts = RealAccount("")
