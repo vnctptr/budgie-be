@@ -126,7 +126,7 @@ def test_AccountList_get():
   l0.append("foo:bar")
   l0.append("foo:baz:act1")
   l0.append("foo:baz:act2")
-  l1 = l0.get("foo")
+  l1 = l0.subaccount("foo")
   assert isinstance(l1, AccountList)
   assert l1.contains("bar")
   assert l1.contains("baz:act1")

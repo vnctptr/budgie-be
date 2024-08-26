@@ -232,13 +232,13 @@ class AccountList:
     """
     Returns true if the account is already in the account list
     """
-    return self.get(account) is not None
+    return self.subaccount(account) is not None
 
   #-----------------------------------------------------------------------------
 
-  def get( self, account: Union[str, Account]) -> Union[None, 'AccountList']:
+  def subaccount( self, account: Union[str, Account]) -> Optional['AccountList']:
     """
-    Returns the
+    Returns a subaccount.
     """
     if isinstance( account, str ):
       account = Account(account)
@@ -250,7 +250,7 @@ class AccountList:
     if root not in self.accounts:
       return None
 
-    return self.accounts[root].get( account )
+    return self.accounts[root].subaccount( account )
 
   #-----------------------------------------------------------------------------
 
