@@ -1,3 +1,5 @@
+from typing import List
+
 from flask import Blueprint, abort
 
 import budgie.data
@@ -31,12 +33,11 @@ def get_account_list( name: str ):
     name: user name to list accounts for
   """
   user = budgie.data.get_user(name)
-  print(user)
   if user is None:
     abort(404)
 
   return {
-    "accounts": user.accounts
+    "accounts": user.accounts.to_dict()
   }
 
 # ------------------------------------------------------------------------------
@@ -54,22 +55,26 @@ def get_account( name: str, **kwargs ):
   if user is None:
     abort(404)
 
-  account = ""
+  account_name = ""
 
   for depth in range( MAX_ACCOUNT_PATH_LENGTH ):
     var = f"breadcrumb_{depth}"
     if var in kwargs:
-      if account == "":
-        account = kwargs[var]
+      if account_name == "":
+        account_name = kwargs[var]
       else:
-        account = f"{account}:{kwargs[var]}"
+        account_name = f"{account_name}:{kwargs[var]}"
     else:
       break
 
-  if not user.accounts.contains(account):
+  account = user.accounts.get(account_name)
+  if account is None:
     abort(404)
 
-  return {}
+  return {
+    "name": account_name,
+    "accounts": account.to_dict()
+  }
 
 # register URL rules for all path depths supported
 rule = "/users/<name>/accounts/"

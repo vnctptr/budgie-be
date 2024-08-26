@@ -16,6 +16,7 @@ class Account:
     """
     self.account = str.split(name, ":")
 
+  #-----------------------------------------------------------------------------
 
   def __str__( self ) -> str:
     """
@@ -23,6 +24,7 @@ class Account:
     """
     return ":".join( self.account )
 
+  #-----------------------------------------------------------------------------
 
   def __repr__( self ) -> str:
     """
@@ -30,6 +32,7 @@ class Account:
     """
     return f'Account("{self.__str__()}")'
 
+  #-----------------------------------------------------------------------------
 
   def __eq__( self, value: Union[ str, 'Account'] ) -> bool:
     """
@@ -47,6 +50,52 @@ class Account:
 
     return True
 
+  #-----------------------------------------------------------------------------
+
+  def __ne__( self, value: Union[ str, 'Account'] ) -> bool:
+    """
+    Inequality operator.
+    """
+    return not self.__eq__(value)
+
+  #-----------------------------------------------------------------------------
+
+  def __lt__( self, value: Union[ str, 'Account'] ) -> bool:
+    """
+    A < B comparison operator.
+    """
+    if isinstance( value, str ):
+      value = Account(value)
+
+    return str(self) < str(value)
+
+  #-----------------------------------------------------------------------------
+
+  def __gt__( self, value: Union[ str, 'Account' ] ) -> bool:
+    """
+    A > B comparison operator.
+    """
+    if isinstance( value, str ):
+      value = Account(value)
+    return value < self
+
+  #-----------------------------------------------------------------------------
+
+  def __le__( self, value: Union[ str, 'Account' ] ) -> bool:
+    """
+    A <= B comparison operator.
+    """
+    return self < value or self == value
+
+  #-----------------------------------------------------------------------------
+
+  def __ge__( self, value: Union[ str, 'Account' ] ) -> bool:
+    """
+    A >= B comparison operator.
+    """
+    return self > value or self == value
+
+  #-----------------------------------------------------------------------------
 
   def empty( self ) -> bool:
     """
@@ -54,6 +103,7 @@ class Account:
     """
     return len( self.account ) == 0
 
+  #-----------------------------------------------------------------------------
 
   def push_front( self, value: Union[ str, 'Account' ] ):
     """
@@ -69,6 +119,7 @@ class Account:
 
     self.account = new_account
 
+  #-----------------------------------------------------------------------------
 
   def push_back( self, value: Union[ str, 'Account' ] ):
     """
@@ -80,6 +131,7 @@ class Account:
     for val in value.account:
       self.account.append( val )
 
+  #-----------------------------------------------------------------------------
 
   def pop_front( self ) -> str:
     """
@@ -87,6 +139,7 @@ class Account:
     """
     return self.account.pop(0)
 
+  #-----------------------------------------------------------------------------
 
   def pop_back( self ) -> str:
     """
@@ -94,7 +147,7 @@ class Account:
     """
     return self.account.pop(-1)
 
-#-------------------------------------------------------------------------------
+#===============================================================================
 
 class AccountList:
   """
@@ -123,6 +176,7 @@ class AccountList:
       for account in accounts:
         self.append(account)
 
+  #-----------------------------------------------------------------------------
 
   def __str__( self ) -> str:
     """
@@ -139,6 +193,15 @@ class AccountList:
     ret += '}'
     return ret
 
+  #-----------------------------------------------------------------------------
+
+  def __repr__( self ) -> str:
+    """
+    Returns the representation of this object.
+    """
+    return str(self.to_dict())
+
+  #-----------------------------------------------------------------------------
 
   def append( self, account: Union[ str, Account ] ):
     """
@@ -163,27 +226,37 @@ class AccountList:
 
     self.accounts[root] = lower_list
 
+  #-----------------------------------------------------------------------------
 
   def contains( self, account: Union[ str, Account ]) -> bool:
     """
     Returns true if the account is already in the account list
     """
+    return self.get(account) is not None
+
+  #-----------------------------------------------------------------------------
+
+  def get( self, account: Union[str, Account]) -> Union[None, 'AccountList']:
+    """
+    Returns the
+    """
     if isinstance( account, str ):
       account = Account(account)
 
     if account.empty():
-      return True
+      return self
 
     root = account.pop_front()
     if root not in self.accounts:
-      return False
+      return None
 
-    return self.accounts[root].contains( account )
+    return self.accounts[root].get( account )
 
+  #-----------------------------------------------------------------------------
 
   def list_accounts( self ) -> List[ Account ]:
     """
-    Return a list of all accounts, ordered alphabetically
+    Returns a list of all accounts, ordered alphabetically
     """
     ret: List[Account] = []
 
@@ -195,4 +268,30 @@ class AccountList:
         ret.append( subaccount )
 
     ret.sort()
+    return ret
+
+  #-----------------------------------------------------------------------------
+
+  def to_dict( self ) -> dict:
+    """
+    Returns all accounts, organized as a dict.
+
+    For example, if this list contains the following accounts:
+      - foo:bar
+      - foo:baz:act1
+      - foo:baz:act2
+    then this function will return the following structure:
+    {
+      "foo": {
+        "bar": {},
+        "baz": {
+          "act1": {},
+          "act2": {}
+        }
+      },
+    }
+    """
+    ret: dict = {}
+    for name in self.accounts:
+      ret[name] = self.accounts[name].to_dict()
     return ret
