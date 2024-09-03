@@ -1,5 +1,9 @@
 from budgie.data.Account import Account, AccountList
 
+# ==============================================================================
+# Account tests
+# ==============================================================================
+
 def test_Account_basics():
   a1 = Account("foo:bar:baz")
   assert a1.account == ["foo", "bar", "baz"]
@@ -58,9 +62,9 @@ def test_Account_push():
   assert a1 == "foo:bar:baz"
   a1.push_front("test1:test2")
   a1.push_back("test3:test4:test5")
+  assert a1 == "test1:test2:foo:bar:baz:test3:test4:test5"
 
 #-------------------------------------------------------------------------------
-  assert a1 == "test1:test2:foo:bar:baz:test3:test4:test5"
 
 def test_Account_pop():
   a1 = Account("foo:bar:baz")
@@ -70,7 +74,9 @@ def test_Account_pop():
   assert a1.pop_back() == "baz"
   assert a1 == "bar"
 
-#===============================================================================
+# ==============================================================================
+# AccountList tests
+# ==============================================================================
 
 def test_AccountList_init():
   var1 = AccountList()
