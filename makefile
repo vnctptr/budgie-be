@@ -1,7 +1,7 @@
-FLASK := python -m flask
+CONFIG := ./testdata/config.toml
 
 run:
-	$(FLASK) --app budgie run
+	python -m budgie $(CONFIG)
 
 test:
 	py.test

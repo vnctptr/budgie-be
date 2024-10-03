@@ -1,20 +1,20 @@
 from typing import List
 
 import paramiko as ssh
+import socket
 
 class SSHServer:
   """
   Serves the git repositories to incoming clients.
   """
 
-  def __init__( self, host: str ):
+  def __init__( self, config: dict ):
     """
     Constructor.
-
-    Args:
-      - Host: hostname with optional port (separated by ":")
     """
-    self.ssh_transport = ssh.transport.Transport(host)
+    self.socket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+    self.socket.bind( (socket.gethostname(), config['port']))
+    self.ssh_transport = ssh.transport.Transport(self.socket)
 
   #-----------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@ class SSHServer:
 
   #-----------------------------------------------------------------------------
 
-  def check_auth_none( self, username: str ) -> int:
+  def check_auth_none( self, _: str ) -> int:
     """
     Checks if a given username is allowed to open a channel without auth.
 
