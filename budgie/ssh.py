@@ -2,8 +2,9 @@ from typing import List
 
 import paramiko as ssh
 import socket
+import threading
 
-class SSHServer:
+class SSHServer( ssh.ServerInterface ):
   """
   Serves the git repositories to incoming clients.
   """
@@ -13,8 +14,14 @@ class SSHServer:
     Constructor.
     """
     self.socket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
     self.socket.bind( (socket.gethostname(), config['port']))
+    self.socket.listen()
+
     self.ssh_transport = ssh.transport.Transport(self.socket)
+
+    self.event = threading.Event()
 
   #-----------------------------------------------------------------------------
 
@@ -22,7 +29,7 @@ class SSHServer:
     """
     Starts the server and begin accepting clients.
     """
-    self.ssh_transport.start_server(server=self)
+    self.ssh_transport.start_server(event=self.event, server=self)
 
   #-----------------------------------------------------------------------------
 
@@ -30,6 +37,7 @@ class SSHServer:
     """
     Stops the server.
     """
+    self.ssh_transport.stop_thread()
 
   #-----------------------------------------------------------------------------
 
