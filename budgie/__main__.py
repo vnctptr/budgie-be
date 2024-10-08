@@ -7,6 +7,7 @@ from .util import die
 
 from .api.v1 import api as v1
 from .ssh import SSHServer
+from .data import DataStorage
 
 # ==============================================================================
 # Helper functions
@@ -17,6 +18,8 @@ def verify_config(config: dict) -> bool:
   Verifies that the configuration is valid.
   """
   if not SSHServer.verify_config(config):
+    return False
+  if not DataStorage.verify_config(config):
     return False
   return True
 
@@ -45,9 +48,10 @@ if not verify_config(config):
 # ==============================================================================
 
 ssh = SSHServer(config)
+data = DataStorage(config)
 
-app = Flask(__name__)
-app.register_blueprint( v1, url_prefix='/v1' )
+app = Flask("budgie-be")
+app.register_blueprint( v1, url_prefix='/v1', data_obj=data )
 
 # ==============================================================================
 # Main script

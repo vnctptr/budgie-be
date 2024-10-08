@@ -1,16 +1,32 @@
-from typing import List
+from typing import Optional
 
 from flask import Blueprint, abort
+from flask.blueprints import BlueprintSetupState
 
-import budgie.data
-
-api = Blueprint('v1', __name__)
+from budgie.data import DataStorage
 
 # ==============================================================================
-# Constants
+# Constants & global variables
 # ==============================================================================
 
 MAX_ACCOUNT_PATH_LENGTH = 5
+
+api = Blueprint('v1', __name__)
+_data: Optional[DataStorage] = None
+
+# ==============================================================================
+# API initialization
+# ==============================================================================
+
+def api_init(state: BlueprintSetupState):
+  """
+  Initializes the API
+  """
+  global _data
+  assert "data_obj" in state.options
+  _data = state.options["data_obj"]
+
+api.record(api_init)
 
 # ==============================================================================
 # Test routes
@@ -32,7 +48,10 @@ def get_account_list( name: str ):
   Args:
     name: user name to list accounts for
   """
-  user = budgie.data.get_user(name)
+  global _data
+  assert _data is not None
+
+  user = _data.get_user(name)
   if user is None:
     abort(404)
 
@@ -51,7 +70,10 @@ def get_account( name: str, **kwargs ):
     name: user name to list accounts for
     kwargs: breadcrumbs to reconstitute account name from
   """
-  user = budgie.data.get_user(name)
+  global _data
+  assert _data is not None
+
+  user = _data.get_user(name)
   print(user)
   if user is None:
     abort(404)
@@ -81,5 +103,4 @@ def get_account( name: str, **kwargs ):
 rule = "/users/<name>/accounts/"
 for depth in range( MAX_ACCOUNT_PATH_LENGTH ):
   rule = f"{rule}<breadcrumb_{depth}>/"
-  print(rule)
   api.add_url_rule(rule, view_func=get_account)
