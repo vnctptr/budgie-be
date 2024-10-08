@@ -4,15 +4,34 @@ import paramiko as ssh
 import socket
 import threading
 
+import budgie.verify_config as verify
+
 class SSHServer( ssh.ServerInterface ):
   """
   Serves the git repositories to incoming clients.
   """
 
-  def __init__( self, config: dict ):
+  @staticmethod
+  def verify_config(main_config: dict) -> bool:
+    """
+    Verifies that the configuration is valid.
+    """
+    parent = "SSH"
+    if not verify.object(main_config, parent):
+      return False
+    config = main_config[parent]
+    ok = True
+    ok &= verify.integer(config, "port", parent, min=0, max=10000)
+    return ok
+
+  #-----------------------------------------------------------------------------
+
+  def __init__( self, main_config: dict ):
     """
     Constructor.
     """
+    config = main_config["SSH"]
+
     self.socket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
     self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
     self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, True)
