@@ -1,2 +1,6 @@
 [SSH]
 port = 4242
+
+[demo]
+enable = true
+users = [ "alice.bc", "bob.bc" ]

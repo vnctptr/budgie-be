@@ -5,6 +5,12 @@ from flask.blueprints import BlueprintSetupState
 
 from budgie.data import DataStorage
 
+class ApiFactory:
+  """
+  Convenience class to create an API blueprint and hold its data.
+  """
+  #TODO: implement
+
 # ==============================================================================
 # Constants & global variables
 # ==============================================================================
