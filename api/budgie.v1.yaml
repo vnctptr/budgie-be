@@ -1,0 +1,564 @@
+---
+
+openapi: '3.0.3'
+info:
+  title: Budgie backend
+  version: '1.0'
+
+components:
+  securitySchemes:
+    UserAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ==========================================================================
+    # Business logic structures
+    # ==========================================================================
+    AccountName:
+      description: Name of an account, format "foo:bar:baz"
+      type: string
+      pattern: "^(\\w+:)?(\\w+)$"
+
+    # --------------------------------------------------------------------------
+
+    AccountListItem:
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/AccountName'
+        url:
+          $ref: '#/components/schemas/Link'
+
+    # --------------------------------------------------------------------------
+
+    Currency:
+      type: string
+      pattern: "^\\w{3,}$"
+
+    # --------------------------------------------------------------------------
+
+    Amount:
+      type: object
+      properties:
+        value:
+          description: Amount of money, in the smallest unit (e.g. cents)
+          type: integer
+        Currency:
+          $ref: '#/components/schemas/Currency'
+
+    # --------------------------------------------------------------------------
+
+    TransactionLine:
+      description: An amount of money moved
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/AccountName'
+        amount:
+          $ref: '#/components/schemas/Amount'
+
+    # --------------------------------------------------------------------------
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        label:
+          type: string
+          maxLength: 255
+        date:
+          $ref: '#/components/schemas/Date'
+        notes:
+          type: string
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionLine'
+
+    # ==========================================================================
+    # API-related matters
+    # ==========================================================================
+
+    Date:
+      description: Date, in ISO-8601 format (YYYY-MM-DD)
+      type: string
+      pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+
+    # --------------------------------------------------------------------------
+
+    UUID:
+      description: Universally Unique Identifier (UUID)
+      type: string
+      format: uuid
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+
+    # --------------------------------------------------------------------------
+
+    Link:
+      description: Simple URL (usually http/https)
+      type: string
+      format: uri
+      pattern: "^[a-z]+://.*$"
+
+    # --------------------------------------------------------------------------
+
+    APILinks:
+      description: Related links within the API, for navigation purposes
+      type: array
+      items:
+        type: object
+        properties:
+          url:
+            $ref: '#/components/schemas/Link'
+          description:
+            type: string
+
+    # --------------------------------------------------------------------------
+
+    Error:
+      description: Error response structure
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+        links:
+          $ref: '#/components/schemas/APILinks'
+
+paths:
+  # ============================================================================
+  # Account endpoints
+  # ============================================================================
+
+  /accounts:
+    get:
+      summary: Access the list of accounts
+      responses:
+        '200':
+          description: Returns the list of accounts for the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AccountListItem'
+                  links:
+                    $ref: '#/components/schemas/APILinks'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - UserAuth: []
+    post:
+      summary: Create a new account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: '#/components/schemas/AccountName'
+      responses:
+        '303':
+          description: Account created successfully
+          headers:
+            Location:
+              description: URL of the created account
+              schema:
+                $ref: '#/components/schemas/Link'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    $ref: '#/components/schemas/Link'
+                  links:
+                    $ref: '#/components/schemas/APILinks'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - UserAuth: []
+
+  # ----------------------------------------------------------------------------
+
+  /accounts/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/AccountName'
+    get:
+      summary: Access a specific account
+      responses:
+        '200':
+          description: Returns the details of the account
+          content:
+            application/json:
+              schema:
+                type: object
+                #TODO
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - UserAuth: []
+
+  # ============================================================================
+  # Currency endpoints
+  # ============================================================================
+
+  /currencies:
+    get:
+      summary: Access the list of currencies
+      responses:
+        '200':
+          description: Returns the list of currencies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currencies:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Currency'
+                  links:
+                    $ref: '#/components/schemas/APILinks'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - UserAuth: []
+    post:
+      summary: Create a new currency
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currency:
+                  $ref: '#/components/schemas/Currency'
+      responses:
+        '303':
+          description: Currency created successfully
+          headers:
+            Location:
+              description: URL of the created currency
+              schema:
+                $ref: '#/components/schemas/Link'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    $ref: '#/components/schemas/Link'
+                  links:
+                    $ref: '#/components/schemas/APILinks'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - UserAuth: []
+
+  # ----------------------------------------------------------------------------
+
+  /currencies/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Currency'
+    get:
+      summary: Access a specific currency
+      responses:
+        '200':
+          description: Returns the details of the currency
+          content:
+            application/json:
+              schema:
+                type: object
+                #TODO
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Currency not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - UserAuth: []
+
+  # ----------------------------------------------------------------------------
+
+  /currencies/{name}/rate:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/Currency'
+    get:
+      summary: Get the exchange rate for a specific currency
+      description: >
+        Retrieves the exchange rate for the specified currency against the base
+        currency.
+      parameters:
+        - name: minDate
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Date'
+        - name: maxDate
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Date'
+      responses:
+        '200':
+          description: Returns the exchange rate for the specified currency
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rate:
+                    type: number
+                    format: float
+                  links:
+                    $ref: '#/components/schemas/APILinks'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Currency not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - UserAuth: []
+
+  # ============================================================================
+  # Transaction endpoints
+  # ============================================================================
+
+  /transactions:
+    get:
+      summary: Access list of transactions
+      parameters:
+        - name: minDate
+          in: query
+          schema:
+            $ref: '#/components/schemas/Date'
+        - name: maxDate
+          in: query
+          schema:
+            $ref: '#/components/schemas/Date'
+      responses:
+        '200':
+          description: Returns the list of transactions for the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+                  links:
+                    $ref: '#/components/schemas/APILinks'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - UserAuth: []
+    post:
+      summary: Create a new transaction
+      parameters:
+        - name: transaction
+          in: body
+          required: true
+          schema:
+            $ref: "#/components/schemas/Transaction"
+      responses:
+        '303':
+          description: Transaction created successfully
+          headers:
+            Location:
+              description: URL of the created transaction
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  links:
+                    $ref: '#/components/schemas/APILinks'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - UserAuth: []
+
+  # ----------------------------------------------------------------------------
+
+  /transaction/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Access a specific transaction
+      responses:
+        '200':
+          description: Returns the specified transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - UserAuth: []
+    delete:
+      summary: Delete a specific transaction
+      responses:
+        '200':
+          description: Transaction deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  links:
+                    $ref: '#/components/schemas/APILinks'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - UserAuth: []
